@@ -1,12 +1,13 @@
+import os
 import glob
 from collections import namedtuple
 
 from PyQt5.QtCore import Qt, QObject
-from PyQt5.QtGui import QTextCursor, QKeyEvent, QColor, QBrush
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, QThread
+from PyQt5.QtGui import QTextCursor, QKeyEvent, QColor, QBrush
 from PyQt5 import QtWidgets
 
-# from qobuz_dl.core import QUALITIES
+from qobuz_dl.core import QUALITIES
 
 import model
 from model import DownloadStatus
@@ -72,17 +73,20 @@ class DownloadThread(QThread):
 
 
 class MainView(QtWidgets.QWidget):
-    def __init__(self, qobuz) -> None:
+    def __init__(self, qobuz, config, config_path) -> None:
         super().__init__()
         self.qobuz = qobuz
-        self.init_view()
-        self.setMinimumSize(800, 620)
-        self.setWindowTitle("Qobuz Downloader")
+        self.config = config
+        self.config_path = config_path
         self.results = []
         # List of DownloadItems
         self.dl_queue = []
         self.dl_in_progress = False
         self.download_thread = None
+
+        self.init_view()
+        self.setMinimumSize(800, 620)
+        self.setWindowTitle("Qobuz Downloader")
 
         # TODO: this is temporary until downloader thread is fixed
         # remove_leftovers(self.qobuz.directory)
@@ -99,12 +103,15 @@ class MainView(QtWidgets.QWidget):
 
         self.create_layout_search()
         self.create_layout_download()
+        self.create_layout_config()
 
         main_grid = QtWidgets.QHBoxLayout(self)
         main_grid.addWidget(self.views)
         main_grid.addWidget(self.frame_search)
         main_grid.addWidget(self.frame_download)
+        main_grid.addWidget(self.frame_config)
         self.frame_download.hide()
+        self.frame_config.hide()
 
     def create_view_navigation_layout(self):
         self.views = QtWidgets.QListWidget()
@@ -131,33 +138,30 @@ class MainView(QtWidgets.QWidget):
 
     def show_search_view(self):
         self.frame_download.hide()
+        self.frame_config.hide()
         self.frame_search.show()
 
     def show_dl_view(self):
         self.frame_search.hide()
+        self.frame_config.hide()
         self.frame_download.show()
 
     def show_cfg_view(self):
-        print("show_cfg_view")
-        # pass
+        self.frame_search.hide()
+        self.frame_download.hide()
+        self.frame_config.show()
 
     def create_layout_search(self):
         self.line_search = QtWidgets.QLineEdit()
         self.btn_search = QtWidgets.QPushButton("Search")
         self.btn_add_dl_queue = QtWidgets.QPushButton("Add to Download")
         self.comb_search_type = QtWidgets.QComboBox()
-        # self.comb_quality = QtWidgets.QComboBox()
 
         # Supported types for search
         self.search_types = [model.Album, model.Artist, model.Track, model.Playlist]
         for item in self.search_types:
             self.comb_search_type.addItem(item.__name__, item)
         self.comb_search_type.setCurrentText("Album")
-
-        # TODO: make connection between selection and data
-        # for _, val in QUALITIES.items():
-        #     self.comb_quality.addItem(val)
-        # self.comb_quality.setCurrentText(QUALITIES[self.qobuz.quality])
 
         # init table
         column_names = ["#", "Description", "URL"]
@@ -227,15 +231,88 @@ class MainView(QtWidgets.QWidget):
         self.btn_download.clicked.connect(self.download_queue)
         self.btn_stop_dl.clicked.connect(self.stop_download)
 
+    def create_layout_config(self):
+        self.comb_quality = QtWidgets.QComboBox()
+        for q, val in QUALITIES.items():
+            self.comb_quality.addItem(val, q)
+        self.comb_quality.setCurrentText(QUALITIES[self.qobuz.quality])
+
+        self.sb_limit = QtWidgets.QSpinBox()
+        self.sb_limit.setMinimum(10)
+        self.sb_limit.setMaximum(500)
+        self.sb_limit.setValue(self.qobuz.interactive_limit)
+
+        self.line_dl_dir = QtWidgets.QLineEdit()
+        self.line_dl_dir.setText(self.qobuz.directory)
+        self.line_dl_dir.setDisabled(True)
+
+        btn_dl_dir = QtWidgets.QPushButton("Downloads")
+        btn_dl_dir.clicked.connect(self.get_dl_dir)
+        btn_dl_dir.setStyleSheet("""
+            border: none;
+            padding: 0px;
+        """)
+
+        btn_save = QtWidgets.QPushButton("Save")
+        btn_save.clicked.connect(self.save_config)
+        btn_logout = QtWidgets.QPushButton("Log out and Quit")
+        btn_logout.clicked.connect(self.logout_quit)
+
+        # layout
+        config_view = QtWidgets.QGridLayout()
+        config_view.addWidget(QtWidgets.QLabel("Quality"), 0, 0)
+        config_view.addWidget(self.comb_quality, 0, 1)
+        config_view.addWidget(QtWidgets.QLabel("Search Limit"), 1, 0)
+        config_view.addWidget(self.sb_limit, 1, 1)
+        config_view.addWidget(btn_dl_dir, 2, 0)
+        config_view.addWidget(self.line_dl_dir, 2, 1)
+        config_view.addWidget(btn_save, 3, 0)
+        config_view.addWidget(btn_logout, 3, 1)
+        config_view.setRowStretch(config_view.rowCount(), 1)
+
+        self.frame_config = QtWidgets.QFrame()
+        self.frame_config.setLayout(config_view)
+
+    def get_dl_dir(self):
+        folderpath = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select Folder')
+        self.line_dl_dir.setText(folderpath)
+
+    def save_config(self):
+        dl_dir = self.line_dl_dir.text()
+        search_limit = self.sb_limit.value()
+        quality = self.comb_quality.currentData()
+
+        self.qobuz.directory = dl_dir
+        self.qobuz.interactive_limit = search_limit
+        self.quality = quality
+
+        self.config["DEFAULT"]["default_folder"] = dl_dir
+        self.config["DEFAULT"]["default_limit"] = str(search_limit)
+        self.config["DEFAULT"]["default_quality"] = str(quality)
+        with open(self.config_path, "w") as config_file:
+            self.config.write(config_file)
+
+    def logout_quit(self):
+        self.config["DEFAULT"]["email"] = ""
+        self.config["DEFAULT"]["password"] = ""
+        with open(self.config_path, "w") as config_file:
+            self.config.write(config_file)
+        self.close()
+
     def search(self):
         self.s_type = self.comb_search_type.currentData()
         s_type_str = self.s_type.__name__.lower()
         query = self.line_search.text()
         if len(query) == 0:
             return
-        results_raw = self.qobuz.search_by_type(query, s_type_str)
+        results_raw = self.qobuz.search_by_type(
+            query, s_type_str, self.qobuz.interactive_limit)
+        # print(f"len(results_raw) {len(results_raw)}")
+        # for index, result in enumerate(results_raw):
+        #     print(f"{index} {result}")
         self.results.clear()
         for result in results_raw:
+            print(f"result {result}")
             text = result["text"]
             data = model.parse_str(s_type_str, text)
             url = result["url"]
@@ -329,8 +406,6 @@ class MainView(QtWidgets.QWidget):
         self.download_thread.start()
 
     def download_finished(self):
-        print('Finshed downloading')
-        # TODO: change row colors back to original
         self.dl_in_progress = False
 
     def dl_item_started(self, index):

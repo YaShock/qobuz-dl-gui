@@ -70,12 +70,9 @@ def check_config_init():
 
 
 # TODO: create settings that will save the input
-def login():
+def login(config, config_path):
     login_window = Login()
 
-    # TODO: create config if it doesn't exist yet
-    config = configparser.ConfigParser()
-    config.read(CONFIG_FILE)
     try:
         email = config["DEFAULT"]["email"]
         password = config["DEFAULT"]["password"]
@@ -86,18 +83,25 @@ def login():
     if email == "" or password == "":
         if login_window.exec_() == QtWidgets.QDialog.Accepted:
             email = login_window.text_email.text()
-            password = login_window.text_pass.text()
+            password = login_window.text_pass.text()            
 
             config["DEFAULT"]["email"] = email
             config["DEFAULT"]["password"] = hashlib.md5(
                 password.encode("utf-8")).hexdigest()
             # TODO: check credentials
-            with open(CONFIG_FILE, "w") as configfile:
-                config.write(configfile)
+            with open(config_path, "w") as config_file:
+                config.write(config_file)
 
             # email = "kobuzmisilevi@gmail.com"
             # password = "Kobuz777!"
-    qobuz = QobuzDL()
+    default_folder = config["DEFAULT"]["default_folder"]
+    default_limit = int(config["DEFAULT"]["default_limit"])
+    default_quality = int(config["DEFAULT"]["default_quality"])
+
+    qobuz = QobuzDL(
+        directory=default_folder,
+        quality=default_quality,
+        interactive_limit=default_limit)
     qobuz.get_tokens() # get 'app_id' and 'secrets' attrs
     qobuz.initialize_client(email, password, qobuz.app_id, qobuz.secrets)
     return qobuz
@@ -106,16 +110,16 @@ def login():
 def start_gui():
     app = QtWidgets.QApplication(sys.argv)
     apply_stylesheet(app, theme='theme.xml')
-    # apply_stylesheet(app, theme='dark_cyan.xml')
 
     check_config_init()
+    config = configparser.ConfigParser()
+    config.read(CONFIG_FILE)
 
     # TODO make a login window
-    qobuz = login()
+    qobuz = login(config, CONFIG_FILE)
     if qobuz:
-        window = MainView(qobuz)
+        window = MainView(qobuz, config, CONFIG_FILE)
         window.show()
-        # window.checkLogin()
         app.exec_()
 
 
