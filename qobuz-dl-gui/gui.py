@@ -2,6 +2,7 @@ import glob
 import sys
 import os
 from collections import namedtuple
+import configparser
 
 from PyQt5.QtCore import Qt, QObject
 from PyQt5.QtGui import QTextCursor, QKeyEvent, QColor, QBrush
@@ -13,6 +14,7 @@ from qobuz_dl.core import QobuzDL, QUALITIES
 
 import model
 from model import DownloadStatus
+from login import Login
 
 
 def remove_leftovers(directory):
@@ -74,6 +76,15 @@ class DownloadThread(QThread):
             self.qobuz.handle_url(url)
 
 
+def check_config_init():
+    if not os.path.isdir(CONFIG_PATH) or not os.path.isfile(CONFIG_FILE):
+        os.makedirs(CONFIG_PATH, exist_ok=True)
+        reset_config(CONFIG_FILE)
+
+    if len(sys.argv) < 2:
+        sys.exit(qobuz_dl_args().print_help())
+
+
 class MainView(QtWidgets.QWidget):
     def __init__(self, qobuz) -> None:
         super().__init__()
@@ -89,9 +100,6 @@ class MainView(QtWidgets.QWidget):
 
         # TODO: this is temporary until downloader thread is fixed
         # remove_leftovers(self.qobuz.directory)
-
-    def __info__(self, msg):
-        QtWidgets.QMessageBox.information(self, 'Info', msg, QtWidgets.QMessageBox.Yes)
 
     def __output__(self, text):
         cursor = self.print_text_edit.textCursor()
@@ -393,31 +401,34 @@ class MainView(QtWidgets.QWidget):
             self.add_dl_queue_item(idx, 0, str(idx + 1))
 
 
-def start_gui(qobuz):
+# TODO: create settings that will save the input
+def login():
+    login_window = Login()
+
+    if login_window.exec_() == QtWidgets.QDialog.Accepted:
+        email = login_window.text_email.text()
+        password = login_window.text_pass.text()
+
+        # email = "kobuzmisilevi@gmail.com"
+        # password = "Kobuz777!"
+        qobuz = QobuzDL()
+        qobuz.get_tokens() # get 'app_id' and 'secrets' attrs
+        qobuz.initialize_client(email, password, qobuz.app_id, qobuz.secrets)
+        return qobuz
+
+
+def start_gui():
     app = QtWidgets.QApplication(sys.argv)
     apply_stylesheet(app, theme='theme.xml')
 
     # TODO make a login window
-    window = MainView(qobuz)
-    window.show()
-    # window.checkLogin()
-
-    app.exec_()
-
-
-# TODO: create settings that will save the input
-def login():
-    # email = input("E-mail: ")
-    # password = input("Password: ")
-
-    email = "kobuzmisilevi@gmail.com"
-    password = "Kobuz777!"
-    qobuz = QobuzDL()
-    qobuz.get_tokens() # get 'app_id' and 'secrets' attrs
-    qobuz.initialize_client(email, password, qobuz.app_id, qobuz.secrets)
-    return qobuz
+    qobuz = login()
+    if qobuz:
+        window = MainView(qobuz)
+        window.show()
+        # window.checkLogin()
+        app.exec_()
 
 
 if __name__ == '__main__':
-    qobuz = login()
-    start_gui(qobuz)
+    start_gui()
