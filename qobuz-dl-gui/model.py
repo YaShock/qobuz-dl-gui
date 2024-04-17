@@ -1,5 +1,6 @@
 from collections import namedtuple
 from enum import Enum
+from qobuz_dl.utils import format_duration
 
 
 Album = namedtuple("Album", ["artist", "name", "duration", "quality"])
@@ -24,22 +25,21 @@ class DownloadItem:
 # DownloadItem = namedtuple("DownloadItem", ["type", "desc", "url", "status"])
 
 
-def parse_str(s_type: str, s: str) -> namedtuple:
-    # TODO: error handling
+def parse_str(s_type: str, data: dict) -> namedtuple:
     if s_type == "album":
-        vals = s.split(" - ")
-        dur_quality = vals[2].split(" ")
-        return Album(vals[0], vals[1], dur_quality[0], dur_quality[1])
+        artist_name = data["artist"]["name"]
+        duration = format_duration(data["duration"])
+        quality = "HI-RES" if data["hires_streamable"] else "LOSSLESS"
+        return Album(artist_name, data["title"], duration, quality)
     elif s_type == "artist":
-        vals = s.split(" - ")
-        return Artist(vals[0], vals[1])
+        return Artist(data["name"], str(data["albums_count"]))
     elif s_type == "track":
-        vals = s.split(" - ")
-        dur_quality = vals[2].split(" ")
-        return Track(vals[0], vals[1], dur_quality[0], dur_quality[1])
+        performer = data["performer"]["name"]
+        duration = format_duration(data["duration"])
+        quality = "HI-RES" if data["hires_streamable"] else "LOSSLESS"
+        return Track(performer, data["title"], duration, quality)
     elif s_type == "playlist":
-        vals = s.split(" - ")
-        return Playlist(vals[0], vals[1])
+        return Playlist(data["name"], str(data["tracks_count"]))
     else:
         raise Exception("parse_str: unknown search type")
 

@@ -305,16 +305,13 @@ class MainView(QtWidgets.QWidget):
         query = self.line_search.text()
         if len(query) == 0:
             return
-        results_raw = self.qobuz.search_by_type(
+        results_raw = self.qobuz.search_by_type_unformatted(
             query, s_type_str, self.qobuz.interactive_limit)
-        # print(f"len(results_raw) {len(results_raw)}")
-        # for index, result in enumerate(results_raw):
-        #     print(f"{index} {result}")
         self.results.clear()
         for result in results_raw:
-            print(f"result {result}")
             text = result["text"]
-            data = model.parse_str(s_type_str, text)
+            data = result["data"]
+            data = model.parse_str(s_type_str, data)
             url = result["url"]
             self.results.append((text, url, data))
 

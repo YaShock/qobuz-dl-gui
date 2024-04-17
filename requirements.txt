@@ -1,3 +1,2 @@
-qobuz-dl
 PyQt5
 qt-material
