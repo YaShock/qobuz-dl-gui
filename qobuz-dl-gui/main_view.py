@@ -168,8 +168,8 @@ class MainView(QtWidgets.QWidget):
         self.comb_search_type.setCurrentText("Album")
 
         # init table
-        column_names = ["#", "Description", "URL"]
-        self.table_search = self.create_search_table(column_names)
+        column_names = ["#", "Artist", "Name", "Duration", "Quality"]
+        self.table_search = self.create_search_table(column_names, 2)
 
         # print
         self.print_text_edit = QtWidgets.QTextEdit()
@@ -183,8 +183,6 @@ class MainView(QtWidgets.QWidget):
         line_grid.addWidget(self.btn_search)
 
         line_grid_2 = QtWidgets.QHBoxLayout()
-        # line_grid_2.addWidget(QtWidgets.QLabel("QUALITY:"))
-        # line_grid_2.addWidget(self.comb_quality)
         line_grid_2.addStretch(4)
         line_grid_2.addWidget(self.btn_add_dl_queue)
 
@@ -205,7 +203,7 @@ class MainView(QtWidgets.QWidget):
     def create_layout_download(self):
         # init table
         column_names = ["#", "Status", "Type", "Description"]
-        self.table_dl = self.create_search_table(column_names)
+        self.table_dl = self.create_search_table(column_names, 3)
 
         # layout
         self.btn_clear_all = QtWidgets.QPushButton("Remove All")
@@ -321,7 +319,7 @@ class MainView(QtWidgets.QWidget):
 
         self.set_search_result(self.s_type, self.results)
 
-    def create_search_table(self, column_names) -> QtWidgets.QTableWidget:
+    def create_search_table(self, column_names, col_stretch) -> QtWidgets.QTableWidget:
         table = QtWidgets.QTableWidget()
         table.setColumnCount(len(column_names))
         table.setRowCount(0)
@@ -329,9 +327,13 @@ class MainView(QtWidgets.QWidget):
         table.verticalHeader().setVisible(False)
         table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         table.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
-        table.horizontalHeader().setStretchLastSection(True)
-        table.horizontalHeader().setSectionResizeMode(
+
+        header = table.horizontalHeader()
+        header.setStretchLastSection(True)
+        header.setSectionResizeMode(
             QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(col_stretch, QtWidgets.QHeaderView.Stretch)
+
         table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         table.setFocusPolicy(Qt.NoFocus)
         for index, name in enumerate(column_names):
