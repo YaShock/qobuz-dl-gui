@@ -42,7 +42,7 @@ class DownloadThread(QThread):
         super().__init__()
         self.qobuz = qobuz
         self.urls = urls
-        self.setTerminationEnabled(True)
+        self.queue = []
 
     def run(self):
         if not self.urls or not isinstance(self.urls, list):
@@ -54,22 +54,26 @@ class DownloadThread(QThread):
 
     def _download_urls(self):
         for index in range(len(self.urls)):
+            url_queue = []
+            self.queue.append(url_queue)
+            self._handle_url(self.urls[index], url_queue)
+
+        for index in range(len(self.urls)):
             interrupt = self.isInterruptionRequested()
-            print(f'Interrupt requested: {interrupt}')
             if interrupt:
                 break
             self.item_started.emit(index)
-            self._handle_url(self.urls[index])
-            self.item_finished.emit(index)
-        # self.qobuz.download_list_of_urls(self.urls)
+            url_queue = self.queue[index]
+            for item in url_queue:
+                interrupt = self.isInterruptionRequested()
+                if interrupt:
+                    break
+                item()
+            else:
+                self.item_finished.emit(index)
 
-    def _handle_url(self, url):
-        if "last.fm" in url:
-            self.qobuz.download_lastfm_pl(url)
-        elif os.path.isfile(url):
-            self.qobuz.download_from_txt_file(url)
-        else:
-            self.qobuz.handle_url(url)
+    def _handle_url(self, url, queue):
+        self.qobuz.handle_url(url, queue)
 
 
 class MainView(QtWidgets.QWidget):
@@ -399,7 +403,6 @@ class MainView(QtWidgets.QWidget):
         self.download_thread.all_finished.connect(self.download_finished)
         self.download_thread.item_started.connect(self.dl_item_started)
         self.download_thread.item_finished.connect(self.dl_item_finished)
-        self.download_thread.setTerminationEnabled(True)
         self.download_thread.start()
 
     def download_finished(self):
@@ -414,21 +417,14 @@ class MainView(QtWidgets.QWidget):
         self.add_dl_queue_item(index, 1, "Done")
 
     def stop_download(self):
-        # TODO: implement
         if self.download_thread:
-            # TODO: terminating threads is unsafe and leaves the files
-            # in a locked state, this is a temporary solution!
-            print('stop_download')
-            self.download_thread.terminate()
+            self.download_thread.requestInterruption()
             self.download_thread.wait()
-            print('terminated waited')
             self.download_thread = None
         self.dl_in_progress = False
 
 
     def clear_dl_queue_all(self):
-        # self.dl_queue.clear()
-        # self.table_dl.setRowCount(0)
         self.clear_dl_queue_list([x for x in range(len(self.dl_queue))])
 
     def clear_dl_queue_selected(self):

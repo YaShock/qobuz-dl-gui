@@ -80,7 +80,7 @@ class QobuzDL:
             secret for secret in bundle.get_secrets().values() if secret
         ]  # avoid empty fields
 
-    def download_from_id(self, item_id, album=True, alt_path=None):
+    def download_from_id(self, item_id, album=True, alt_path=None, queue=None):
         if handle_download_id(self.downloads_db, item_id, add_id=False):
             logger.info(
                 f"{OFF}This release ID ({item_id}) was already downloaded "
@@ -102,12 +102,12 @@ class QobuzDL:
                 self.folder_format,
                 self.track_format,
             )
-            dloader.download_id_by_type(not album)
+            dloader.download_id_by_type(not album, queue)
             handle_download_id(self.downloads_db, item_id, add_id=True)
         except (requests.exceptions.RequestException, NonStreamable) as e:
             logger.error(f"{RED}Error getting release: {e}. Skipping...")
 
-    def handle_url(self, url):
+    def handle_url(self, url, queue=None):
         possibles = {
             "playlist": {
                 "func": self.client.get_plist_meta,
@@ -161,11 +161,12 @@ class QobuzDL:
                     item["id"],
                     True if type_dict["iterable_key"] == "albums" else False,
                     new_path,
+                    queue
                 )
             if url_type == "playlist" and not self.no_m3u_for_playlists:
                 make_m3u(new_path)
         else:
-            self.download_from_id(item_id, type_dict["album"])
+            self.download_from_id(item_id, type_dict["album"], queue=queue)
 
     def download_list_of_urls(self, urls):
         if not urls or not isinstance(urls, list):

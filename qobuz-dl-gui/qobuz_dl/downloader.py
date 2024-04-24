@@ -56,13 +56,13 @@ class Download:
         self.folder_format = folder_format or DEFAULT_FOLDER
         self.track_format = track_format or DEFAULT_TRACK
 
-    def download_id_by_type(self, track=True):
+    def download_id_by_type(self, track=True, queue=None):
         if not track:
-            self.download_release()
+            self.download_release(queue)
         else:
-            self.download_track()
+            self.download_track(queue)
 
-    def download_release(self):
+    def download_release(self, queue=None):
         count = 0
         meta = self.client.get_album_meta(self.item_id)
 
@@ -117,7 +117,7 @@ class Download:
             parse = self.client.get_track_url(i["id"], fmt_id=self.quality)
             if "sample" not in parse and parse["sampling_rate"]:
                 is_mp3 = True if int(self.quality) == 5 else False
-                self._download_and_tag(
+                fn = lambda i=i: self._download_and_tag(
                     dirn,
                     count,
                     parse,
@@ -125,14 +125,17 @@ class Download:
                     meta,
                     False,
                     is_mp3,
-                    i["media_number"] if is_multiple else None,
-                )
+                    i["media_number"] if is_multiple else None)
+                if queue is not None:
+                    queue.append(fn)
+                else:
+                    fn()
             else:
                 logger.info(f"{OFF}Demo. Skipping")
             count = count + 1
         logger.info(f"{GREEN}Completed")
 
-    def download_track(self):
+    def download_track(self, queue=None):
         parse = self.client.get_track_url(self.item_id, self.quality)
 
         if "sample" not in parse and parse["sampling_rate"]:
@@ -169,7 +172,7 @@ class Download:
                     og_quality=self.cover_og_quality,
                 )
             is_mp3 = True if int(self.quality) == 5 else False
-            self._download_and_tag(
+            fn = lambda: self._download_and_tag(
                 dirn,
                 1,
                 parse,
@@ -177,8 +180,11 @@ class Download:
                 meta,
                 True,
                 is_mp3,
-                False,
-            )
+                False)
+            if queue is not None:
+                queue.append(fn)
+            else:
+                fn()
         else:
             logger.info(f"{OFF}Demo. Skipping")
         logger.info(f"{GREEN}Completed")
