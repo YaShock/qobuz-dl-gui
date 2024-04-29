@@ -15,7 +15,6 @@ from qobuz_dl.exceptions import (
     InvalidAppSecretError,
     InvalidQuality,
 )
-from qobuz_dl.color import GREEN, YELLOW
 
 RESET = "Reset your credentials with 'qobuz-dl -r'"
 
@@ -24,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 class Client:
     def __init__(self, email, pwd, app_id, secrets):
-        logger.info(f"{YELLOW}Logging...")
+        logger.info(f"Logging...")
         self.secrets = secrets
         self.id = str(app_id)
         self.session = requests.Session()
@@ -112,7 +111,7 @@ class Client:
             elif r.status_code == 400:
                 raise InvalidAppIdError("Invalid app id.\n" + RESET)
             else:
-                logger.info(f"{GREEN}Logged: OK")
+                logger.info(f"Logged: OK")
         elif (
             epoint in ["track/getFileUrl", "favorite/getUserFavorites"]
             and r.status_code == 400
@@ -129,7 +128,7 @@ class Client:
         self.uat = usr_info["user_auth_token"]
         self.session.headers.update({"X-User-Auth-Token": self.uat})
         self.label = usr_info["user"]["credential"]["parameters"]["short_label"]
-        logger.info(f"{GREEN}Membership: {self.label}")
+        logger.info(f"Membership: {self.label}")
 
     def multi_meta(self, epoint, key, id, type):
         total = 1

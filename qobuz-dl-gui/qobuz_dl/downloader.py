@@ -7,7 +7,6 @@ from pathvalidate import sanitize_filename, sanitize_filepath
 from tqdm import tqdm
 
 import qobuz_dl.metadata as metadata
-from qobuz_dl.color import OFF, GREEN, RED, YELLOW, CYAN
 from qobuz_dl.exceptions import NonStreamable
 
 QL_DOWNGRADE = "FormatRestrictedByFormatAvailability"
@@ -73,7 +72,7 @@ class Download:
             meta.get("release_type") != "album"
             or meta.get("artist").get("name") == "Various Artists"
         ):
-            logger.info(f'{OFF}Ignoring Single/EP/VA: {meta.get("title", "n/a")}')
+            logger.info(f'Ignoring Single/EP/VA: {meta.get("title", "n/a")}')
             return
 
         album_title = _get_title(meta)
@@ -83,12 +82,12 @@ class Download:
 
         if not self.downgrade_quality and not quality_met:
             logger.info(
-                f"{OFF}Skipping {album_title} as it doesn't meet quality requirement"
+                f"Skipping {album_title} as it doesn't meet quality requirement"
             )
             return
 
         logger.info(
-            f"\n{YELLOW}Downloading: {album_title}\nQuality: {file_format}"
+            f"\nDownloading: {album_title}\nQuality: {file_format}"
             f" ({bit_depth}/{sampling_rate})\n"
         )
         album_attr = self._get_album_attr(
@@ -102,7 +101,7 @@ class Download:
         os.makedirs(dirn, exist_ok=True)
 
         if self.no_cover:
-            logger.info(f"{OFF}Skipping cover")
+            logger.info(f"Skipping cover")
         else:
             _get_extra(meta["image"]["large"], dirn, og_quality=self.cover_og_quality)
 
@@ -131,9 +130,9 @@ class Download:
                 else:
                     fn()
             else:
-                logger.info(f"{OFF}Demo. Skipping")
+                logger.info(f"Demo. Skipping")
             count = count + 1
-        logger.info(f"{GREEN}Completed")
+        logger.info(f"Completed")
 
     def download_track(self, queue=None):
         parse = self.client.get_track_url(self.item_id, self.quality)
@@ -142,7 +141,7 @@ class Download:
             meta = self.client.get_track_meta(self.item_id)
             track_title = _get_title(meta)
             artist = _safe_get(meta, "performer", "name")
-            logger.info(f"\n{YELLOW}Downloading: {artist} - {track_title}")
+            logger.info(f"\nDownloading: {artist} - {track_title}")
             format_info = self._get_format(meta, is_track_id=True, track_url_dict=parse)
             file_format, quality_met, bit_depth, sampling_rate = format_info
 
@@ -152,7 +151,7 @@ class Download:
 
             if not self.downgrade_quality and not quality_met:
                 logger.info(
-                    f"{OFF}Skipping {track_title} as it doesn't "
+                    f"Skipping {track_title} as it doesn't "
                     "meet quality requirement"
                 )
                 return
@@ -164,7 +163,7 @@ class Download:
             dirn = os.path.join(self.path, sanitized_title)
             os.makedirs(dirn, exist_ok=True)
             if self.no_cover:
-                logger.info(f"{OFF}Skipping cover")
+                logger.info(f"Skipping cover")
             else:
                 _get_extra(
                     meta["album"]["image"]["large"],
@@ -186,8 +185,8 @@ class Download:
             else:
                 fn()
         else:
-            logger.info(f"{OFF}Demo. Skipping")
-        logger.info(f"{GREEN}Completed")
+            logger.info(f"Demo. Skipping")
+        logger.info(f"Completed")
 
     def _download_and_tag(
         self,
@@ -205,7 +204,7 @@ class Download:
         try:
             url = track_url_dict["url"]
         except KeyError:
-            logger.info(f"{OFF}Track not available for download")
+            logger.info(f"Track not available for download")
             return
 
         if multiple:
@@ -225,7 +224,7 @@ class Download:
         final_file = os.path.join(root_dir, formatted_path)[:250] + extension
 
         if os.path.isfile(final_file):
-            logger.info(f"{OFF}{track_title} was already downloaded")
+            logger.info(f"{track_title} was already downloaded")
             return
 
         tqdm_download(url, filename, filename)
@@ -241,7 +240,7 @@ class Download:
                 self.embed_art,
             )
         except Exception as e:
-            logger.error(f"{RED}Error tagging the file: {e}", exc_info=True)
+            logger.error(f"Error tagging the file: {e}", exc_info=True)
 
     @staticmethod
     def _get_filename_attr(artist, track_metadata, track_title):
@@ -321,7 +320,7 @@ def tqdm_download(url, fname, desc):
         unit_scale=True,
         unit_divisor=1024,
         desc=desc,
-        bar_format=CYAN + "{n_fmt}/{total_fmt} /// {desc}",
+        bar_format="{n_fmt}/{total_fmt} /// {desc}",
     ) as bar:
         for data in r.iter_content(chunk_size=1024):
             size = file.write(data)
@@ -356,7 +355,7 @@ def _get_title(item_dict):
 def _get_extra(item, dirn, extra="cover.jpg", og_quality=False):
     extra_file = os.path.join(dirn, extra)
     if os.path.isfile(extra_file):
-        logger.info(f"{OFF}{extra} was already downloaded")
+        logger.info(f"{extra} was already downloaded")
         return
     tqdm_download(
         item.replace("_600.", "_org.") if og_quality else item,
@@ -383,7 +382,7 @@ def _clean_format_str(folder: str, track: str, file_format: str) -> Tuple[str, s
         ):
             default = DEFAULT_FORMATS[file_format][i]
             logger.error(
-                f"{RED}invalid format string for format {file_format}"
+                f"invalid format string for format {file_format}"
                 f". defaulting to {default}"
             )
             fs = default

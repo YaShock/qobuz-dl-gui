@@ -8,7 +8,6 @@ from pathvalidate import sanitize_filename
 
 from qobuz_dl.bundle import Bundle
 from qobuz_dl import downloader, qopy
-from qobuz_dl.color import CYAN, OFF, RED, YELLOW, DF, RESET
 from qobuz_dl.exceptions import NonStreamable
 from qobuz_dl.db import create_db, handle_download_id
 from qobuz_dl.utils import (
@@ -71,7 +70,7 @@ class QobuzDL:
 
     def initialize_client(self, email, pwd, app_id, secrets):
         self.client = qopy.Client(email, pwd, app_id, secrets)
-        logger.info(f"{YELLOW}Set max quality: {QUALITIES[int(self.quality)]}\n")
+        logger.info(f"Set max quality: {QUALITIES[int(self.quality)]}\n")
 
     def get_tokens(self):
         bundle = Bundle()
@@ -83,7 +82,7 @@ class QobuzDL:
     def download_from_id(self, item_id, album=True, alt_path=None, queue=None):
         if handle_download_id(self.downloads_db, item_id, add_id=False):
             logger.info(
-                f"{OFF}This release ID ({item_id}) was already downloaded "
+                f"This release ID ({item_id}) was already downloaded "
                 "according to the local database.\nUse the '--no-db' flag "
                 "to bypass this."
             )
@@ -105,7 +104,7 @@ class QobuzDL:
             dloader.download_id_by_type(not album, queue)
             handle_download_id(self.downloads_db, item_id, add_id=True)
         except (requests.exceptions.RequestException, NonStreamable) as e:
-            logger.error(f"{RED}Error getting release: {e}. Skipping...")
+            logger.error(f"Error getting release: {e}. Skipping...")
 
     def handle_url(self, url, queue=None):
         possibles = {
@@ -129,14 +128,14 @@ class QobuzDL:
             type_dict = possibles[url_type]
         except (KeyError, IndexError):
             logger.info(
-                f'{RED}Invalid url: "{url}". Use urls from ' "https://play.qobuz.com!"
+                f'Invalid url: "{url}". Use urls from ' "https://play.qobuz.com!"
             )
             return
         if type_dict["func"]:
             content = [item for item in type_dict["func"](item_id)]
             content_name = content[0]["name"]
             logger.info(
-                f"{YELLOW}Downloading all the music from {content_name} "
+                f"Downloading all the music from {content_name} "
                 f"({url_type})!"
             )
             new_path = create_and_return_dir(
@@ -155,7 +154,7 @@ class QobuzDL:
                     0
                 ]
 
-            logger.info(f"{YELLOW}{len(items)} downloads in queue")
+            logger.info(f"{len(items)} downloads in queue")
             for item in items:
                 self.download_from_id(
                     item["id"],
@@ -170,7 +169,7 @@ class QobuzDL:
 
     def download_list_of_urls(self, urls):
         if not urls or not isinstance(urls, list):
-            logger.info(f"{OFF}Nothing to download")
+            logger.info(f"Nothing to download")
             return
         for url in urls:
             if "last.fm" in url:
@@ -189,22 +188,22 @@ class QobuzDL:
                     if not line.strip().startswith("#")
                 ]
             except Exception as e:
-                logger.error(f"{RED}Invalid text file: {e}")
+                logger.error(f"Invalid text file: {e}")
                 return
             logger.info(
-                f"{YELLOW}qobuz-dl will download {len(urls)}"
+                f"qobuz-dl will download {len(urls)}"
                 f" urls from file: {txt_file}"
             )
             self.download_list_of_urls(urls)
 
     def lucky_mode(self, query, download=True):
         if len(query) < 3:
-            logger.info(f"{RED}Your search query is too short or invalid")
+            logger.info(f"Your search query is too short or invalid")
             return
 
         logger.info(
-            f'{YELLOW}Searching {self.lucky_type}s for "{query}".\n'
-            f"{YELLOW}qobuz-dl will attempt to download the first "
+            f'Searching {self.lucky_type}s for "{query}".\n'
+            f"qobuz-dl will attempt to download the first "
             f"{self.lucky_limit} results."
         )
         results = self.search_by_type(query, self.lucky_type, self.lucky_limit, True)
@@ -216,7 +215,7 @@ class QobuzDL:
 
     def search_by_type_unformatted(self, query, item_type, limit=10, lucky=False):
         if len(query) < 3:
-            logger.info("{RED}Your search query is too short or invalid")
+            logger.info("Your search query is too short or invalid")
             return
 
         possibles = {
@@ -270,12 +269,12 @@ class QobuzDL:
                 item_list.append({"text": text, "url": url, "data": i} if not lucky else url)
             return item_list
         except (KeyError, IndexError):
-            logger.info(f"{RED}Invalid type: {item_type}")
+            logger.info(f"Invalid type: {item_type}")
             return
 
     def search_by_type(self, query, item_type, limit=10, lucky=False):
         if len(query) < 3:
-            logger.info("{RED}Your search query is too short or invalid")
+            logger.info("Your search query is too short or invalid")
             return
 
         possibles = {
@@ -329,7 +328,7 @@ class QobuzDL:
                 item_list.append({"text": text, "url": url} if not lucky else url)
             return item_list
         except (KeyError, IndexError):
-            logger.info(f"{RED}Invalid type: {item_type}")
+            logger.info(f"Invalid type: {item_type}")
             return
 
     def interactive(self, download=True):
@@ -361,18 +360,18 @@ class QobuzDL:
             selected_type = pick(item_types, "I'll search for:\n[press Intro]")[0][
                 :-1
             ].lower()
-            logger.info(f"{YELLOW}Ok, we'll search for " f"{selected_type}s{RESET}")
+            logger.info(f"Ok, we'll search for " f"{selected_type}s")
             final_url_list = []
             while True:
                 query = input(
                     f"{CYAN}Enter your search: [Ctrl + c to quit]\n" f"-{DF} "
                 )
-                logger.info(f"{YELLOW}Searching...{RESET}")
+                logger.info(f"Searching...")
                 options = self.search_by_type(
                     query, selected_type, self.interactive_limit
                 )
                 if not options:
-                    logger.info(f"{OFF}Nothing found{RESET}")
+                    logger.info(f"Nothing found")
                     continue
                 title = (
                     f'*** RESULTS FOR "{query.title()}" ***\n\n'
@@ -397,7 +396,7 @@ class QobuzDL:
                     if y_n[0][0] == "N":
                         break
                 else:
-                    logger.info(f"{YELLOW}Ok, try again...{RESET}")
+                    logger.info(f"Ok, try again...")
                     continue
             if final_url_list:
                 desc = (
@@ -417,7 +416,7 @@ class QobuzDL:
 
                 return final_url_list
         except KeyboardInterrupt:
-            logger.info(f"{YELLOW}Bye")
+            logger.info(f"Bye")
             return
 
     def download_lastfm_pl(self, playlist_url):
@@ -426,7 +425,7 @@ class QobuzDL:
         try:
             r = requests.get(playlist_url, timeout=10)
         except requests.exceptions.RequestException as e:
-            logger.error(f"{RED}Playlist download failed: {e}")
+            logger.error(f"Playlist download failed: {e}")
             return
         soup = bso(r.content, "html.parser")
         artists = [artist.text for artist in soup.select(ARTISTS_SELECTOR)]
@@ -439,13 +438,13 @@ class QobuzDL:
             ]
 
         if not track_list:
-            logger.info(f"{OFF}Nothing found")
+            logger.info(f"Nothing found")
             return
 
         pl_title = sanitize_filename(soup.select_one("h1").text)
         pl_directory = os.path.join(self.directory, pl_title)
         logger.info(
-            f"{YELLOW}Downloading playlist: {pl_title} " f"({len(track_list)} tracks)"
+            f"Downloading playlist: {pl_title} " f"({len(track_list)} tracks)"
         )
 
         for i in track_list:

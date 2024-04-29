@@ -31,7 +31,6 @@ CONFIG_FILE = os.path.join(CONFIG_PATH, "config.ini")
 # QOBUZ_DB = os.path.join(CONFIG_PATH, "qobuz_dl.db")
 
 
-# TODO: pull request to qobuz dl to create a default config from email/pass
 def reset_config(config_file):
     logging.info(f"{YELLOW}Creating config file: {config_file}")
     config = configparser.ConfigParser()
@@ -69,7 +68,6 @@ def check_config_init():
         reset_config(CONFIG_FILE)
 
 
-# TODO: create settings that will save the input
 def login(config, config_path):
     login_window = Login()
 
@@ -88,12 +86,10 @@ def login(config, config_path):
             config["DEFAULT"]["email"] = email
             config["DEFAULT"]["password"] = hashlib.md5(
                 password.encode("utf-8")).hexdigest()
-            # TODO: check credentials
+
             with open(config_path, "w") as config_file:
                 config.write(config_file)
 
-            # email = "kobuzmisilevi@gmail.com"
-            # password = "Kobuz777!"
     default_folder = config["DEFAULT"]["default_folder"]
     default_limit = int(config["DEFAULT"]["default_limit"])
     default_quality = int(config["DEFAULT"]["default_quality"])
@@ -115,7 +111,6 @@ def start_gui():
     config = configparser.ConfigParser()
     config.read(CONFIG_FILE)
 
-    # TODO make a login window
     qobuz = login(config, CONFIG_FILE)
     if qobuz:
         window = MainView(qobuz, config, CONFIG_FILE)

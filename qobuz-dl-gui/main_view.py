@@ -1,5 +1,7 @@
 import os
 import glob
+import sys
+import logging
 from collections import namedtuple
 
 from PyQt5.QtCore import Qt, QObject
@@ -13,24 +15,11 @@ import model
 from model import DownloadStatus
 
 
-def remove_leftovers(directory):
-    print(f"remove_leftovers {directory}")
-    directory = os.path.join(directory, "**", ".*.tmp")
-    for i in glob.glob(directory, recursive=True):
-        try:
-            os.remove(i)
-        except Exception as e:
-            print(f"could not delete file {e}")
-        except:  # noqa
-            print("could not delete file")
-            # pass
-
-
 class EmittingStream(QObject):
-    textWritten = pyqtSignal(str)
+    text_written = pyqtSignal(str)
 
     def write(self, text):
-        self.textWritten.emit(str(text))
+        self.text_written.emit(str(text))
 
 
 class DownloadThread(QThread):
@@ -46,8 +35,7 @@ class DownloadThread(QThread):
 
     def run(self):
         if not self.urls or not isinstance(self.urls, list):
-            # logger.info(f"{OFF}Nothing to download")
-            print(f"Nothing to download")
+            logging.info("Nothing to download")
         else:
             self._download_urls()
         self.all_finished.emit()
@@ -92,15 +80,28 @@ class MainView(QtWidgets.QWidget):
         self.setMinimumSize(800, 620)
         self.setWindowTitle("Qobuz Downloader")
 
-        # TODO: this is temporary until downloader thread is fixed
-        # remove_leftovers(self.qobuz.directory)
-
     def __output__(self, text):
-        cursor = self.print_text_edit.textCursor()
-        cursor.movePosition(QTextCursor.End)
-        cursor.insertText(text)
-        self.print_text_edit.setTextCursor(cursor)
-        self.print_text_edit.ensureCursorVisible()
+        colors = {
+            "DEBUG": self.palette().highlight().color(),
+            "INFO": self.palette().highlight().color(),
+            "WARNING": QColor(255, 255, 0),
+            "ERROR": QColor(255, 0, 0)
+        }
+
+        parts = text.split(" - ")
+        level, msg = parts[0], parts[1]
+        default_color = self.print_text_edit.textColor()
+        self.print_text_edit.moveCursor(QTextCursor.End)
+        if level in colors:
+            self.print_text_edit.setTextColor(colors[level])
+        self.print_text_edit.insertPlainText(msg)
+        self.print_text_edit.setTextColor(default_color)
+
+        # cursor = self.print_text_edit.textCursor()
+        # cursor.movePosition(QTextCursor.End)
+        # cursor.insertText(text)
+        # self.print_text_edit.setTextCursor(cursor)
+        # self.print_text_edit.ensureCursorVisible()
 
     def init_view(self):
         self.create_view_navigation_layout()
@@ -109,13 +110,40 @@ class MainView(QtWidgets.QWidget):
         self.create_layout_download()
         self.create_layout_config()
 
-        main_grid = QtWidgets.QHBoxLayout(self)
-        main_grid.addWidget(self.views)
-        main_grid.addWidget(self.frame_search)
-        main_grid.addWidget(self.frame_download)
-        main_grid.addWidget(self.frame_config)
+        main_layout = QtWidgets.QHBoxLayout()
+        main_layout.addWidget(self.views)
+        main_layout.addWidget(self.frame_search)
+        main_layout.addWidget(self.frame_download)
+        main_layout.addWidget(self.frame_config)
         self.frame_download.hide()
         self.frame_config.hide()
+        main_grid = QtWidgets.QFrame()
+        main_grid.setLayout(main_layout)
+
+        self.init_logging(main_grid)
+
+    def init_logging(self, main_grid):
+        vertical_grid = QtWidgets.QVBoxLayout(self)
+        self.print_text_edit = QtWidgets.QTextEdit()
+        self.print_text_edit.setReadOnly(True)
+        splitter = QtWidgets.QSplitter(Qt.Vertical)
+        splitter.addWidget(main_grid)
+        splitter.addWidget(self.print_text_edit)
+        vertical_grid.addWidget(splitter)
+
+        # sys.stdout = EmittingStream(text_written=self.__output__)
+        # sys.stderr = EmittingStream(text_written=self.__output__)
+        text_field_stream = EmittingStream(text_written=self.__output__)
+        sys.stdout = text_field_stream
+        sys.stderr = text_field_stream
+
+        logger = logging.getLogger()
+        logger.setLevel(logging.INFO)
+
+        stdout_handler = logging.StreamHandler(stream=text_field_stream)
+        format = "%(levelname)s - %(message)s"
+        stdout_handler.setFormatter(logging.Formatter(format))
+        logger.addHandler(stdout_handler)
 
     def create_view_navigation_layout(self):
         self.views = QtWidgets.QListWidget()
@@ -171,11 +199,6 @@ class MainView(QtWidgets.QWidget):
         column_names = ["#", "Artist", "Name", "Duration", "Quality"]
         self.table_search = self.create_search_table(column_names, 2)
 
-        # print
-        self.print_text_edit = QtWidgets.QTextEdit()
-        self.print_text_edit.setReadOnly(True)
-        self.print_text_edit.setFixedHeight(100)
-
         # layout
         line_grid = QtWidgets.QHBoxLayout()
         line_grid.addWidget(self.comb_search_type)
@@ -190,7 +213,6 @@ class MainView(QtWidgets.QWidget):
         search_view.addLayout(line_grid)
         search_view.addWidget(self.table_search)
         search_view.addLayout(line_grid_2)
-        search_view.addWidget(self.print_text_edit)
 
         self.frame_search = QtWidgets.QFrame()
         self.frame_search.setLayout(search_view)

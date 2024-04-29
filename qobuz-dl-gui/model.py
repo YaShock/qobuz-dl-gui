@@ -22,8 +22,6 @@ class DownloadItem:
         self.url = url
         self.status = status
 
-# DownloadItem = namedtuple("DownloadItem", ["type", "desc", "url", "status"])
-
 
 def parse_str(s_type: str, data: dict) -> namedtuple:
     if s_type == "album":
@@ -42,31 +40,3 @@ def parse_str(s_type: str, data: dict) -> namedtuple:
         return Playlist(data["name"], str(data["tracks_count"]))
     else:
         raise Exception("parse_str: unknown search type")
-
-# class ModelBase:
-#     display = ""
-#     name = ""
-
-#     def parse(s: str):
-#         raise Exception("Unsupported type")
-
-# class Album:
-#     display = "Album"
-#     name = "album"
-
-#     def __init__(self, artist: str, name: str, duration: str, quality: str):
-#         self.artist = artist
-#         self.name = name
-#         self.duration = duration
-#         self.quality = quality
-#     props = ['artist', 'name', 'duration', 'quality']
-
-# class Artist:
-#     pass
-
-# class Track:
-#     pass
-
-# class Playlist:
-#     pass
-
