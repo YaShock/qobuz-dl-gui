@@ -1,7 +1,5 @@
-# Wrapper for Qo-DL Reborn. This is a sligthly modified version
-# of qopy, originally written by Sorrow446. All credits to the
-# original author.
-
+# Slightly modified version of qobuz-dl, originally written by vitiko98.
+# All credits to the original author.
 import hashlib
 import logging
 import time

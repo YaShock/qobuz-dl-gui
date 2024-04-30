@@ -1,3 +1,5 @@
+# Slightly modified version of qobuz-dl, originally written by vitiko98.
+# All credits to the original author.
 from colorama import Style, Fore, init
 
 init(autoreset=True)

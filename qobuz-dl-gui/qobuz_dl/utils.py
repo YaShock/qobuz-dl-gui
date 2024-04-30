@@ -1,3 +1,5 @@
+# Slightly modified version of qobuz-dl, originally written by vitiko98.
+# All credits to the original author.
 import re
 import string
 import os
