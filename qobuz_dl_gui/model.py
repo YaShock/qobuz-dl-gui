@@ -1,6 +1,6 @@
 from collections import namedtuple
 from enum import Enum
-from qobuz_dl.utils import format_duration
+from qobuz_dl_gui.qobuz_dl.utils import format_duration
 
 
 Album = namedtuple("Album", ["artist", "name", "duration", "quality"])

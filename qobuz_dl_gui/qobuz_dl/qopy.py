@@ -6,7 +6,7 @@ import time
 
 import requests
 
-from qobuz_dl.exceptions import (
+from qobuz_dl_gui.qobuz_dl.exceptions import (
     AuthenticationError,
     IneligibleError,
     InvalidAppIdError,

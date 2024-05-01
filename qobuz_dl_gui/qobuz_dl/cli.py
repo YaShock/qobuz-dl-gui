@@ -7,11 +7,11 @@ import glob
 import os
 import sys
 
-from qobuz_dl.bundle import Bundle
-from qobuz_dl.color import GREEN, RED, YELLOW
-from qobuz_dl.commands import qobuz_dl_args
-from qobuz_dl.core import QobuzDL
-from qobuz_dl.downloader import DEFAULT_FOLDER, DEFAULT_TRACK
+from qobuz_dl_gui.qobuz_dl.bundle import Bundle
+from qobuz_dl_gui.qobuz_dl.color import GREEN, RED, YELLOW
+from qobuz_dl_gui.qobuz_dl.commands import qobuz_dl_args
+from qobuz_dl_gui.qobuz_dl.core import QobuzDL
+from qobuz_dl_gui.qobuz_dl.downloader import DEFAULT_FOLDER, DEFAULT_TRACK
 
 logging.basicConfig(
     level=logging.INFO,

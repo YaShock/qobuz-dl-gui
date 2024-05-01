@@ -8,11 +8,11 @@ import requests
 from bs4 import BeautifulSoup as bso
 from pathvalidate import sanitize_filename
 
-from qobuz_dl.bundle import Bundle
-from qobuz_dl import downloader, qopy
-from qobuz_dl.exceptions import NonStreamable
-from qobuz_dl.db import create_db, handle_download_id
-from qobuz_dl.utils import (
+from qobuz_dl_gui.qobuz_dl.bundle import Bundle
+from qobuz_dl_gui.qobuz_dl import downloader, qopy
+from qobuz_dl_gui.qobuz_dl.exceptions import NonStreamable
+from qobuz_dl_gui.qobuz_dl.db import create_db, handle_download_id
+from qobuz_dl_gui.qobuz_dl.utils import (
     get_url_info,
     make_m3u,
     smart_discography_filter,

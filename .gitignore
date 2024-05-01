@@ -1,3 +1,5 @@
 venv/
 Qobuz Downloads/
 __pycache__/
+build
+dist

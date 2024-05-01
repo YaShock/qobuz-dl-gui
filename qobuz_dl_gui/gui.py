@@ -3,17 +3,18 @@ import os
 import logging
 import configparser
 import hashlib
+from pathlib import Path
 
 from PyQt5 import QtWidgets
 from qt_material import apply_stylesheet
 
-from qobuz_dl.bundle import Bundle
-from qobuz_dl.color import GREEN, RED, YELLOW
-from qobuz_dl.core import QobuzDL
-from qobuz_dl.downloader import DEFAULT_FOLDER, DEFAULT_TRACK
+from qobuz_dl_gui.qobuz_dl.bundle import Bundle
+from qobuz_dl_gui.qobuz_dl.color import GREEN, RED, YELLOW
+from qobuz_dl_gui.qobuz_dl.core import QobuzDL
+from qobuz_dl_gui.qobuz_dl.downloader import DEFAULT_FOLDER, DEFAULT_TRACK
 
-from login import Login
-from main_view import MainView
+from qobuz_dl_gui.login import Login
+from qobuz_dl_gui.main_view import MainView
 
 
 logging.basicConfig(
@@ -98,14 +99,16 @@ def login(config, config_path):
         directory=default_folder,
         quality=default_quality,
         interactive_limit=default_limit)
-    qobuz.get_tokens() # get 'app_id' and 'secrets' attrs
+    qobuz.get_tokens()
     qobuz.initialize_client(email, password, qobuz.app_id, qobuz.secrets)
     return qobuz
 
 
-def start_gui():
+def main():
+    path_theme = str(Path(__file__).resolve().with_name("theme.xml"))
+
     app = QtWidgets.QApplication(sys.argv)
-    apply_stylesheet(app, theme='theme.xml')
+    apply_stylesheet(app, theme=path_theme)
 
     check_config_init()
     config = configparser.ConfigParser()
@@ -119,4 +122,4 @@ def start_gui():
 
 
 if __name__ == '__main__':
-    start_gui()
+    main()

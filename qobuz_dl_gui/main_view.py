@@ -6,20 +6,14 @@ from collections import namedtuple
 
 from PyQt5.QtCore import Qt, QObject
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, QThread
-from PyQt5.QtGui import QTextCursor, QKeyEvent, QColor, QBrush
+from PyQt5.QtGui import QKeyEvent, QBrush
 from PyQt5 import QtWidgets
 
-from qobuz_dl.core import QUALITIES
+from qobuz_dl_gui.qobuz_dl.core import QUALITIES
 
-import model
-from model import DownloadStatus
-
-
-class EmittingStream(QObject):
-    text_written = pyqtSignal(str)
-
-    def write(self, text):
-        self.text_written.emit(str(text))
+from qobuz_dl_gui import model
+from qobuz_dl_gui.model import DownloadStatus
+from qobuz_dl_gui.logger import QPlainTextEditLogger
 
 
 class DownloadThread(QThread):
@@ -80,28 +74,11 @@ class MainView(QtWidgets.QWidget):
         self.setMinimumSize(800, 620)
         self.setWindowTitle("Qobuz Downloader")
 
-    def __output__(self, text):
-        colors = {
-            "DEBUG": self.palette().highlight().color(),
-            "INFO": self.palette().highlight().color(),
-            "WARNING": QColor(255, 255, 0),
-            "ERROR": QColor(255, 0, 0)
-        }
-
-        parts = text.split(" - ")
-        level, msg = parts[0], parts[1]
-        default_color = self.print_text_edit.textColor()
-        self.print_text_edit.moveCursor(QTextCursor.End)
-        if level in colors:
-            self.print_text_edit.setTextColor(colors[level])
-        self.print_text_edit.insertPlainText(msg)
-        self.print_text_edit.setTextColor(default_color)
-
-        # cursor = self.print_text_edit.textCursor()
-        # cursor.movePosition(QTextCursor.End)
-        # cursor.insertText(text)
-        # self.print_text_edit.setTextCursor(cursor)
-        # self.print_text_edit.ensureCursorVisible()
+    def closeEvent(self, event):
+        logger = logging.getLogger()
+        logger.removeHandler(self.log_handler)
+        self.log_handler = None
+        super().closeEvent(event)
 
     def init_view(self):
         self.create_view_navigation_layout()
@@ -124,26 +101,18 @@ class MainView(QtWidgets.QWidget):
 
     def init_logging(self, main_grid):
         vertical_grid = QtWidgets.QVBoxLayout(self)
-        self.print_text_edit = QtWidgets.QTextEdit()
-        self.print_text_edit.setReadOnly(True)
         splitter = QtWidgets.QSplitter(Qt.Vertical)
         splitter.addWidget(main_grid)
-        splitter.addWidget(self.print_text_edit)
+        self.log_handler = QPlainTextEditLogger(self)
+        splitter.addWidget(self.log_handler.widget)
         vertical_grid.addWidget(splitter)
 
-        # sys.stdout = EmittingStream(text_written=self.__output__)
-        # sys.stderr = EmittingStream(text_written=self.__output__)
-        text_field_stream = EmittingStream(text_written=self.__output__)
-        sys.stdout = text_field_stream
-        sys.stderr = text_field_stream
-
         logger = logging.getLogger()
-        logger.setLevel(logging.INFO)
+        logger.setLevel(logging.DEBUG)
 
-        stdout_handler = logging.StreamHandler(stream=text_field_stream)
         format = "%(levelname)s - %(message)s"
-        stdout_handler.setFormatter(logging.Formatter(format))
-        logger.addHandler(stdout_handler)
+        self.log_handler.setFormatter(logging.Formatter(format))
+        logger.addHandler(self.log_handler)
 
     def create_view_navigation_layout(self):
         self.views = QtWidgets.QListWidget()

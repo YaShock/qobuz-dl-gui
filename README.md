@@ -23,6 +23,16 @@ On first run a qobuz-dl based configuration is created, which can be modified ei
 
 Upon running the program you have to log in with your Qobuz credentials. You can manually log out from config, or by deleting the config file.
 
+## Developing
+
+For development install the package in "editable" mode.
+
+`pip3 install -e .`
+
+To build a distributable run the following:
+
+`pyinstaller gui.spec`
+
 ## Disclaimer
 
 - This program is intended for private use only.

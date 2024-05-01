@@ -8,8 +8,8 @@ import requests
 from pathvalidate import sanitize_filename, sanitize_filepath
 from tqdm import tqdm
 
-import qobuz_dl.metadata as metadata
-from qobuz_dl.exceptions import NonStreamable
+import qobuz_dl_gui.qobuz_dl.metadata as metadata
+from qobuz_dl_gui.qobuz_dl.exceptions import NonStreamable
 
 QL_DOWNGRADE = "FormatRestrictedByFormatAvailability"
 # used in case of error
@@ -114,19 +114,33 @@ class Download:
                 pass
         media_numbers = [track["media_number"] for track in meta["tracks"]["items"]]
         is_multiple = True if len([*{*media_numbers}]) > 1 else False
+
+        def create_dl_fn(
+                root_dir,
+                tmp_count,
+                track_url_dict,
+                track_metadata,
+                album_or_track_metadata,
+                is_track,
+                is_mp3,
+                multiple):
+            return lambda: self._download_and_tag(
+                root_dir, tmp_count, track_url_dict, track_metadata,
+                album_or_track_metadata, is_track, is_mp3, multiple)
+
         for i in meta["tracks"]["items"]:
             parse = self.client.get_track_url(i["id"], fmt_id=self.quality)
             if "sample" not in parse and parse["sampling_rate"]:
                 is_mp3 = True if int(self.quality) == 5 else False
-                fn = lambda i=i: self._download_and_tag(
-                    dirn,
-                    count,
-                    parse,
-                    i,
-                    meta,
-                    False,
-                    is_mp3,
-                    i["media_number"] if is_multiple else None)
+                fn = create_dl_fn(
+                        dirn,
+                        count,
+                        parse,
+                        i,
+                        meta,
+                        False,
+                        is_mp3,
+                        i["media_number"] if is_multiple else None)
                 if queue is not None:
                     queue.append(fn)
                 else:
