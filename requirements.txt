@@ -1,3 +1,9 @@
 PyQt5
 qt-material
 setuptools
+requests
+colorama
+bs4
+pathvalidate
+tqdm
+mutagen

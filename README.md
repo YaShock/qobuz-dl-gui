@@ -13,13 +13,13 @@ If you really like my projects and want to support me, you can buy me a coffee a
 
 First, install the necessary packages for GUI via pip.
 
-`pip3 install -r requirements.txt`
+`pip3 install .`
 
-Then run the main GUI modul from root.
+Then run using one of the following commands:
 
-`python qobuz-dl-gui/gui.py`
+`qdlg` or `qobuz-dl-gui`
 
-On first run a qobuz-dl based configuration is created, which can be modified either by hand or (in limited way) in the GUI config. If you run on Windows the configuration is located in AppData\Roaming\qobuz-dl, otherwise in home/.config/qobuz-dl
+On first run a qobuz-dl based configuration is created, which can be modified either by hand or (in limited way) in the GUI config. If you run on Windows the configuration is located in AppData\Roaming\qobuz-dl, otherwise in home/user/.config/qobuz-dl
 
 Upon running the program you have to log in with your Qobuz credentials. You can manually log out from config, or by deleting the config file.
 
