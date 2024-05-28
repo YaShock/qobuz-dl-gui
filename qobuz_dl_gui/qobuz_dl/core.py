@@ -53,6 +53,7 @@ class QobuzDL:
         "{sampling_rate}kHz]",
         track_format="{tracknumber}. {tracktitle}",
         smart_discography=False,
+        dl_eligible=True,
     ):
         self.directory = create_and_return_dir(directory)
         self.quality = quality
@@ -69,6 +70,7 @@ class QobuzDL:
         self.folder_format = folder_format
         self.track_format = track_format
         self.smart_discography = smart_discography
+        self.dl_eligible = dl_eligible
 
     def initialize_client(self, email, pwd, app_id, secrets):
         self.client = qopy.Client(email, pwd, app_id, secrets)

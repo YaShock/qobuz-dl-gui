@@ -12,6 +12,7 @@ from qobuz_dl_gui.qobuz_dl.bundle import Bundle
 from qobuz_dl_gui.qobuz_dl.color import GREEN, RED, YELLOW
 from qobuz_dl_gui.qobuz_dl.core import QobuzDL
 from qobuz_dl_gui.qobuz_dl.downloader import DEFAULT_FOLDER, DEFAULT_TRACK
+from qobuz_dl_gui.qobuz_dl.exceptions import IneligibleError
 
 from qobuz_dl_gui.login import Login
 from qobuz_dl_gui.main_view import MainView
@@ -100,7 +101,10 @@ def login(config, config_path):
         quality=default_quality,
         interactive_limit=default_limit)
     qobuz.get_tokens()
-    qobuz.initialize_client(email, password, qobuz.app_id, qobuz.secrets)
+    try:
+        qobuz.initialize_client(email, password, qobuz.app_id, qobuz.secrets)
+    except IneligibleError:
+        qobuz.dl_eligible = False
     return qobuz
 
 

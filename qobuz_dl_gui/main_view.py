@@ -68,11 +68,15 @@ class MainView(QtWidgets.QWidget):
         # List of DownloadItems
         self.dl_queue = []
         self.dl_in_progress = False
+        self.dl_eligible = qobuz.dl_eligible
         self.download_thread = None
 
         self.init_view()
         self.setMinimumSize(800, 620)
         self.setWindowTitle("Qobuz Downloader")
+
+        if not self.dl_eligible:
+            logging.warning("This account is not eligible to download tracks.")
 
     def closeEvent(self, event):
         logger = logging.getLogger()
@@ -123,7 +127,8 @@ class MainView(QtWidgets.QWidget):
         item_dl = QtWidgets.QListWidgetItem("Download Queue")
         item_cfg = QtWidgets.QListWidgetItem("Configuration")
         self.views.addItem(item_search)
-        self.views.addItem(item_dl)
+        if self.dl_eligible:
+            self.views.addItem(item_dl)
         self.views.addItem(item_cfg)
         self.views.setCurrentRow(0)
         self.show_view_fns = [
@@ -156,6 +161,8 @@ class MainView(QtWidgets.QWidget):
         self.line_search = QtWidgets.QLineEdit()
         self.btn_search = QtWidgets.QPushButton("Search")
         self.btn_add_dl_queue = QtWidgets.QPushButton("Add to Download")
+        if not self.dl_eligible:
+            self.btn_add_dl_queue.setEnabled(False)
         self.comb_search_type = QtWidgets.QComboBox()
 
         # Supported types for search

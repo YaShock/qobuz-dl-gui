@@ -1,5 +1,7 @@
 venv/
-Qobuz Downloads/
+.venv/
 __pycache__/
+*.egg-info/
+Qobuz Downloads/
 build
 dist
