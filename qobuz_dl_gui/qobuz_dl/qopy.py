@@ -171,6 +171,9 @@ class Client:
     def search_playlists(self, query, limit):
         return self.api_call("playlist/search", query=query, limit=limit)
 
+    def search_labels(self, query, limit):
+        return self.api_call("label/search", query=query, limit=limit)
+
     def search_tracks(self, query, limit):
         return self.api_call("track/search", query=query, limit=limit)
 

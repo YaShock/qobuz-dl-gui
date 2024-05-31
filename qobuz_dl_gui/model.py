@@ -7,6 +7,7 @@ Album = namedtuple("Album", ["artist", "name", "duration", "quality"])
 Artist = namedtuple("Artist", ["name", "releases"])
 Track = namedtuple("Track", ["artist", "name", "duration", "quality"])
 Playlist = namedtuple("Playlist", ["name", "releases"])
+Label = namedtuple("Label", ["name", "releases"])
 
 # READY: initial
 # QUEUED: added to dl queue

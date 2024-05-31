@@ -166,7 +166,7 @@ class MainView(QtWidgets.QWidget):
         self.comb_search_type = QtWidgets.QComboBox()
 
         # Supported types for search
-        self.search_types = [model.Album, model.Artist, model.Track, model.Playlist]
+        self.search_types = [model.Album, model.Artist, model.Track, model.Playlist, model.Label]
         for item in self.search_types:
             self.comb_search_type.addItem(item.__name__, item)
         self.comb_search_type.setCurrentText("Album")

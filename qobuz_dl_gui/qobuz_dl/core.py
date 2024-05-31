@@ -310,6 +310,13 @@ class QobuzDL:
                 "format": "{name} - ({tracks_count} releases)",
                 "requires_extra": False,
             },
+            "playlist": {
+                "func": self.client.search_labels,
+                "album": False,
+                "key": "labels",
+                "format": "{name} - ({tracks_count} releases)",
+                "requires_extra": False,
+            },
         }
 
         try:

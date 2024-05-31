@@ -39,3 +39,4 @@ To build a distributable run the following:
 - You will a Qobuz subscription.
 - I do not condone pirating music or any use of this software in bad faith.
 - By using this software you are implicitly accepting the [Qobuz API Terms of Use](https://static.qobuz.com/apps/api/QobuzAPI-TermsofUse.pdf).
+- `qobuz-dl-gui` is not affiliated with Qobuz
